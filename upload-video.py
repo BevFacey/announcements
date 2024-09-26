@@ -9,15 +9,18 @@ SERVICE_ACCOUNT_FILE = 'service-account-file.json'
 SCOPES = ['https://www.googleapis.com/auth/youtube.upload']
 video_extensions = ['*.mp4', '*.avi', '*.mov', '*.mkv']
 
-def upload_video(file_path, title, description, category_id, tags):
+def upload_video(file_path):
+    today = datetime.today()
+    credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    youtube = build('youtube', 'v3', credentials=credentials)
     request = youtube.videos().insert(
         part="snippet,status",
         body={
             "snippet": {
-                "title": title,
-                "description": description,
-                "tags": tags,
-                "categoryId": category_id
+                "title": f'Bev Facey Announcements {today.strftime("%Y-%m-%d")}',
+                "description": f'Bev Facey Announcements for {today.strftime("%B %d, %Y")}',
+                "tags": ['BevFacey'],
+                "categoryId": '27' # Education
             },
             "status": {
                 #"privacyStatus": "public"
@@ -37,13 +40,4 @@ if not video_files:
 else:
     most_recent_video = max(video_files, key=os.path.getctime)
     print(f'The most recent video file is: {most_recent_video}')
-    today = datetime.today()
-    credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-    youtube = build('youtube', 'v3', credentials=credentials)
-    upload_video(
-        file_path=most_recent_video,
-        title=f'Bev Facey Announcements {today.strftime("%Y-%m-%d")}',
-        description=f'Bev Facey Announcements for {today.strftime("%B %d, %Y")}',
-        category_id='27',  # Education
-        tags=['BevFacey']
-    )
+    upload_video(file_path=most_recent_video)
