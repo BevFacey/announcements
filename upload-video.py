@@ -19,15 +19,15 @@ def upload_video(file_path):
             "snippet": {
                 "title": f'Bev Facey Announcements {today.strftime("%Y-%m-%d")}',
                 "description": f'Bev Facey Announcements for {today.strftime("%B %d, %Y")}',
-                "tags": ['BevFacey'],
+                "tags": ['BevFacey', 'Bev Facey'],
                 "categoryId": '27' # Education
             },
             "status": {
-                #"privacyStatus": "public"
-                "privacyStatus": "private"
+                "privacyStatus": "public"
+                #"privacyStatus": "private"
             }
         },
-        media_body=MediaFileUpload(file_path)
+        media_body=MediaFileUpload(file_path, chunksize=-1, resumable=True)
     )
     response = request.execute()
     print(f"Video uploaded: {response['id']}")
