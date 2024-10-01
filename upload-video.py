@@ -2,17 +2,31 @@
 import os
 import glob
 from datetime import datetime
-from google.oauth2 import service_account
+import google_auth_oauthlib.flow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
-SERVICE_ACCOUNT_FILE = 'service-account-file.json'
-SCOPES = ['https://www.googleapis.com/auth/youtube.upload']
+import pickle
+
+channel_id = 'UCS8NR4uTYkC86rZsnf6LRCA'
+client_secrets_file = 'client-secret.json'
+credentials_file = 'youtube-credentials.pkl'
+scopes = ['https://www.googleapis.com/auth/youtube.upload']
 video_extensions = ['*.mp4', '*.avi', '*.mov', '*.mkv']
 
 def upload_video(file_path):
-    today = datetime.today()
-    credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    credentials = None
+    if os.path.exists(credentials_file):
+        with open(credentials_file, 'rb') as token:
+            credentials = pickle.load(token)
+    if not credentials or not credentials.valid:
+        flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(client_secrets_file, scopes)
+        flow.redirect_uri = "http://localhost:8080/"
+        credentials = flow.run_local_server(port=8080)
+        with open(credentials_file, 'wb') as token:
+            pickle.dump(credentials, token)
     youtube = build('youtube', 'v3', credentials=credentials)
+
+    today = datetime.today()
     request = youtube.videos().insert(
         part="snippet,status",
         body={
@@ -21,6 +35,31 @@ def upload_video(file_path):
                 "description": f'Bev Facey Announcements for {today.strftime("%B %d, %Y")}',
                 "tags": ['BevFacey', 'Bev Facey'],
                 "categoryId": '27' # Education
+            },
+            "status": {
+                "privacyStatus": "public"
+                #"privacyStatus": "private"
+            }
+        },
+        media_body=MediaFileUpload(file_path, chunksize=-1, resumable=True)
+    )
+    response = request.execute()
+    print(f"Video uploaded: {response['id']}")
+
+def upload_video_not_working(file_path):
+    today = datetime.today()
+    flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(client_secrets_file, scopes)
+    credentials = flow.run_console()
+    youtube = build('youtube', 'v3', credentials=credentials)
+    request = youtube.videos().insert(
+        part="snippet,status",
+        body={
+            "snippet": {
+                "title": f'Bev Facey Announcements {today.strftime("%Y-%m-%d")}',
+                "description": f'Bev Facey Announcements for {today.strftime("%B %d, %Y")}',
+                "tags": ['BevFacey', 'Bev Facey'],
+                "categoryId": '27', # Education
+                "channelId": channel_id
             },
             "status": {
                 "privacyStatus": "public"
