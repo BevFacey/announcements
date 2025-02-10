@@ -2,3 +2,4 @@
 service-account-file.json
 client-secret.json
 *.pkl
+.DS_Store
