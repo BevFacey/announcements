@@ -28,6 +28,8 @@ announcements = [(row[3], row[4]) for row in csv_reader]
 
 # today's date in the format "Month Day, Year"
 date_today = date.today().strftime("%B %d, %Y")
+print('Good Morning Bev Facey! ',f'Today is {date_today} and here are your morning announcements.')
+
 date_announcement = ('Good Morning Bev Facey! ',f'Today is {date_today} and here are your morning announcements.')
 announcements.insert(0, date_announcement)
 # if it is Friday, add a land acknowledgement
@@ -77,11 +79,13 @@ with open(f"{i}_have_a_great_day.mp3", "wb") as file:
     file.write(audio)
 
 # move the mp3 files to the audio directory
+'''
 audio_directory = 'audio'
 os.makedirs(audio_directory, exist_ok=True)
 for file in announcement_files:
     shutil.move(file, os.path.join(audio_directory, file))
-
+'''
+    
 ### Join audio files
 
 # Print the current working directory
