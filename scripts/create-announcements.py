@@ -1,3 +1,6 @@
+# pip install requests, boto3, mut, Pillow, pdf2image, mutagen
+# sudo apt-get install ffmpeg
+
 import requests
 import csv
 from io import StringIO
@@ -14,31 +17,24 @@ import boto3
 spreadsheet_key = '1SV4eWy58Y6iEIIOGUH60xUZV59eaY7ewp4EoeCZzNxc'
 spreadsheet_gid = '1783949168'
 csv_link = 'https://docs.google.com/spreadsheets/d/'+spreadsheet_key+'/export?gid='+spreadsheet_gid+'&format=csv'
-
 response = requests.get(csv_link)
 response.raise_for_status()  # Ensure the request was successful
-
-# Parse CSV content
 csv_data = response.text
 csv_reader = csv.reader(StringIO(csv_data))
-# Skip header row
-next(csv_reader)
+next(csv_reader) # Skip header row
 # Extract announcements, title is in column 3, content in column 4
 announcements = [(row[3], row[4]) for row in csv_reader]
 
 # today's date in the format "Month Day, Year"
 date_today = date.today().strftime("%B %d, %Y")
-print('Good Morning Bev Facey! ',f'Today is {date_today} and here are your morning announcements.')
-
 date_announcement = ('Good Morning Bev Facey! ',f'Today is {date_today} and here are your morning announcements.')
+print(date_announcement)
 announcements.insert(0, date_announcement)
-# if it is Friday, add a land acknowledgement
-if date.today().weekday() == 4:
+if date.today().weekday() == 4:  # if it is Friday, add a land acknowledgement
     land_acknowledgement = ('We would like to acknowledge that we are on Treaty 6 territory.', 'A traditional meeting grounds, gathering place, and travelling route to the Cree, Saulteaux, Blackfoot, Métis, Dene, and Nakota Sioux. We acknowledge all the many First Nations, Métis, and Inuit whose footsteps have marked these lands for centuries.')
     announcements.insert(1, land_acknowledgement)
-#print(announcements)
 
-############################################ TTS ############################################
+### TTS ###
 
 # credentials are stored in ~/.aws/credentials
 polly_client = boto3.client("polly", region_name="us-west-2")
@@ -53,14 +49,12 @@ def speak(announcement):
         Engine="neural"  # Required for newscaster style
     )
     return response["AudioStream"].read()
-    
 
 # Save the audio file
-announcement_files = []
 i = 0
 for title, content in announcements:
     print(f"{i} Announcement: {title}")
-    filename = f"{i}_announcement.mp3"  # Change file extension to .mp3
+    filename = f"{i}_announcement.mp3"
 
     # if the title is the same as the first bit of the content, don't repeat it
     if content.lower().startswith(title.lower()):
@@ -71,7 +65,6 @@ for title, content in announcements:
     audio = speak(text_to_speak)
     with open(filename, "wb") as file:
         file.write(audio)
-    announcement_files.append(filename)
     i += 1
 
 audio = speak("That's all for your morning announcements. Have a great day.")
@@ -86,18 +79,13 @@ for file in announcement_files:
     shutil.move(file, os.path.join(audio_directory, file))
 '''
     
-### Join audio files
+# join audio files
 
-# Print the current working directory
 print("Current working directory:", os.getcwd())
-
-# find all of the mp3 files in the audio directory
 #audio_directory = 'audio'
 audio_directory = '.'
-
 announcement_files = [f for f in os.listdir(audio_directory) if f.endswith(".mp3")]
 announcement_files.sort()
-print(announcement_files)
 
 # Check and print the duration of each mp3 file
 for file in announcement_files:
@@ -120,25 +108,19 @@ with open("file_list.txt", "w") as file_list:
             file_list.write(f"file '{os.path.join(audio_directory, 'silence.mp3')}'\n")
         firstFile = False
 
-
 output_file = "all_announcements.mp3"
-# delete an existing output file
 if os.path.exists(output_file):
     os.remove(output_file)
 # Use ffmpeg to concatenate the files listed in the text file
 subprocess.run(["ffmpeg", "-f", "concat", "-safe", "0", "-i", "file_list.txt", "-vf", "apad=pad=0.5", "-c:a", "libmp3lame", output_file])
-# Clean up the temporary file list
 os.remove("file_list.txt")
 
-print(f"All mp3 files have been joined into {output_file}")
+### Download slides as a PDF file and export to PNG ###
 
-### Download slides
-
-# Download the presentation as a PDF file
 presentation_id = '1Bdwl1ucbFGd1qDrZk-D3o6uN0S_LyN3TQ75kOd4wiGo'
 pdf_url = f'https://docs.google.com/presentation/d/{presentation_id}/export/pdf'
 pdf_response = requests.get(pdf_url)
-pdf_filename = 'presentation.pdf'
+pdf_filename = 'slides.pdf'
 with open(pdf_filename, 'wb') as pdf_file:
     pdf_file.write(pdf_response.content)
 print(f'Presentation downloaded as {pdf_filename}')
@@ -149,25 +131,18 @@ os.makedirs(output_dir, exist_ok=True)
 images = convert_from_path(pdf_filename)
 for i, image in enumerate(images):
     image_filename = os.path.join(output_dir, f'{i}_slide.png')
-    # resize to 1920x1080
-    image.thumbnail((1920, 1080))
+    image.thumbnail((1920, 1080))  # resize to 1920x1080
     image.save(image_filename, 'PNG')
     print(f'Slide {i + 1} saved as {image_filename}')
 
-print('All slides converted to PNG images.')
-
-
-### Create video
+### Create video ###
 
 # Print the current working directory
-print("Current working directory:", os.getcwd())
-audio_directory = 'audio'
-slides_directory = 'slides'
+#slides_directory = 'slides'
+slides_directory = '.'
 
-# find all of the mp3 files in the audio directory
 announcement_files = [f for f in os.listdir(audio_directory) if f.endswith(".mp3")]
 announcement_files.sort()
-print(announcement_files)
 
 # Check and print the duration of each mp3 file
 durations = {}
@@ -182,12 +157,10 @@ for file in announcement_files:
 # find all of the png files in the slides directory
 slide_files = [f for f in os.listdir(slides_directory) if f.endswith(".png")]
 slide_files.sort()
-print(slide_files)
 
 # Create a temporary directory to store the images with the correct durations
 temp_dir = 'temp_slides'
 os.makedirs(temp_dir, exist_ok=True)
-
 # Save each slide with the correct duration
 for i, slide_file in enumerate(slide_files):
     slide_path = os.path.join(slides_directory, slide_file)
@@ -204,8 +177,8 @@ with open(os.path.join(temp_dir, "file_list.txt"), "w") as file_list:
         file_list.write(f"file '{i}_slide.mp4'\n")
 
 # Use ffmpeg to combine the video segments and audio into a final video
-output_file = "morning_announcements.mp4"
-# delete an existing output file
+date_today_iso = date.today().isoformat()
+output_file = f"Bev Facey Announcements {date_today_iso}.mp4"
 if os.path.exists(output_file):
     os.remove(output_file)
 subprocess.run(["ffmpeg", "-f", "concat", "-safe", "0", "-i", os.path.join(temp_dir, "file_list.txt"), "-i", os.path.join(audio_directory, "all_announcements.mp3"), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-strict", "experimental", "-shortest", output_file])
