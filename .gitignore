@@ -3,3 +3,7 @@ service-account-file.json
 client-secret.json
 *.pkl
 .DS_Store
+credentials
+*.mp3
+slides.pdf
+file_list.txt
