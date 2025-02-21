@@ -77,8 +77,8 @@ for title, content in announcements:
         file.write(audio)
     i += 1
 
-audio = speak()
 closing_file = f"{i}_have_a_great_day.mp3"
+audio = speak("That's all for your morning announcements. Have a great day.")
 with open(closing_file, "wb") as file:
     file.write(audio)
 audio_files.append(closing_file)
@@ -100,9 +100,9 @@ for file in audio_files:
 if not os.path.exists(os.path.join(temp_dir, "silence.mp3")):
     subprocess.run(["ffmpeg", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", "0.5", os.path.join(temp_dir, "silence.mp3")])
 
-output_file = os.path.join(temp_dir, "all_announcements.mp3")
-if os.path.exists(os.path.join(output_file)):
-    os.remove( output_file)
+audio_output_file = os.path.join(temp_dir, "all_announcements.mp3")
+if os.path.exists(os.path.join(audio_output_file)):
+    os.remove( audio_output_file)
 
 # Create a text file listing all the mp3 files to be joined
 with open("file_list.txt", "w") as file_list:
@@ -110,7 +110,7 @@ with open("file_list.txt", "w") as file_list:
         file_list.write(f"file '{os.path.join(temp_dir, file)}'\n")
 
 # Use ffmpeg to concatenate the files listed in the text file
-subprocess.run(["ffmpeg", "-f", "concat", "-safe", "0", "-i", "file_list.txt", "-vf", "apad=pad=0.5", "-c:a", "libmp3lame", output_file])
+subprocess.run(["ffmpeg", "-f", "concat", "-safe", "0", "-i", "file_list.txt", "-vf", "apad=pad=0.5", "-c:a", "libmp3lame", audio_output_file])
 os.remove("file_list.txt")
 
 ### Download slides as a PDF file and export to PNG ###
@@ -156,7 +156,7 @@ for j, slide_file in enumerate(slide_files):
     temp_slide_path = os.path.join(temp_dir, f'{j}_slide.png')
     slide_image.save(temp_slide_path)
     # Create a video segment for each slide
-    subprocess.run(["ffmpeg", "-loop", "1", "-i", temp_slide_path, "-c:v", "libx264", "-t", str(slide_duration), "-pix_fmt", "yuv420p", "-vf", "scale=1920:1080", os.path.join(temp_dir, f'{i}_slide.mp4')])
+    subprocess.run(["ffmpeg", "-loop", "1", "-i", temp_slide_path, "-c:v", "libx264", "-t", str(slide_duration), "-pix_fmt", "yuv420p", "-vf", "scale=1920:1080", os.path.join(temp_dir, f'{j}_slide.mp4')])
 
 # Concatenate all the video segments
 with open(os.path.join(temp_dir, "file_list.txt"), "w") as file_list:
@@ -165,14 +165,16 @@ with open(os.path.join(temp_dir, "file_list.txt"), "w") as file_list:
 
 # Use ffmpeg to combine the video segments and audio into a final video
 date_today_iso = date.today().isoformat()
-output_file = f"Bev Facey Announcements {date_today_iso}.mp4"
-if os.path.exists(output_file):
-    os.remove(output_file)
-subprocess.run(["ffmpeg", "-f", "concat", "-safe", "0", "-i", os.path.join(temp_dir, "file_list.txt"), "-i", os.path.join(audio_directory, "all_announcements.mp3"), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-strict", "experimental", "-shortest", output_file])
+video_output_file = f"Bev Facey Announcements {date_today_iso} (AI Generated).mp4"
+if os.path.exists(video_output_file):
+    os.remove(video_output_file)
+subprocess.run(["ffmpeg", "-f", "concat", "-safe", "0", "-i", os.path.join(temp_dir, "file_list.txt"), "-i", os.path.join(temp_dir, "all_announcements.mp3"), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-strict", "experimental", "-shortest", video_output_file])
 
 # Clean up the temporary files
 shutil.rmtree(temp_dir)
 # delete the pdf file
 os.remove(pdf_filename)
 
-print(f"Video created: {output_file}")
+print(f"Video created: {video_output_file}")
+
+
