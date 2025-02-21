@@ -28,11 +28,18 @@ announcements = [(row[3], row[4]) for row in csv_reader]
 # today's date in the format "Month Day, Year"
 date_today = date.today().strftime("%B %d, %Y")
 date_announcement = ('Good Morning Bev Facey! ',f'Today is {date_today} and here are your morning announcements.')
-print(date_announcement)
+#print(date_announcement)
 announcements.insert(0, date_announcement)
 if date.today().weekday() == 4:  # if it is Friday, add a land acknowledgement
     land_acknowledgement = ('We would like to acknowledge that we are on Treaty 6 territory.', 'A traditional meeting grounds, gathering place, and travelling route to the Cree, Saulteaux, Blackfoot, Métis, Dene, and Nakota Sioux. We acknowledge all the many First Nations, Métis, and Inuit whose footsteps have marked these lands for centuries.')
     announcements.insert(1, land_acknowledgement)
+
+# add a closing announcement
+announcements.append(("That's all for your morning announcements.", "Have a great day."))
+print(announcements)
+
+temp_dir = 'temporary_directory'
+os.makedirs(temp_dir, exist_ok=True)
 
 ### TTS ###
 
@@ -50,11 +57,14 @@ def speak(announcement):
     )
     return response["AudioStream"].read()
 
+audio_files = []
+
 # Save the audio file
 i = 0
 for title, content in announcements:
     print(f"{i} Announcement: {title}")
     filename = f"{i}_announcement.mp3"
+    audio_files.append(filename)
 
     # if the title is the same as the first bit of the content, don't repeat it
     if content.lower().startswith(title.lower()):
@@ -67,50 +77,38 @@ for title, content in announcements:
         file.write(audio)
     i += 1
 
-audio = speak("That's all for your morning announcements. Have a great day.")
-with open(f"{i}_have_a_great_day.mp3", "wb") as file:
+audio = speak()
+closing_file = f"{i}_have_a_great_day.mp3"
+with open(closing_file, "wb") as file:
     file.write(audio)
-
-# move the mp3 files to the audio directory
-'''
-audio_directory = 'audio'
-os.makedirs(audio_directory, exist_ok=True)
-for file in announcement_files:
-    shutil.move(file, os.path.join(audio_directory, file))
-'''
+audio_files.append(closing_file)
     
+# move the mp3 files to the temp directory
+for file in audio_files:
+    shutil.move(file, os.path.join(temp_dir, file))
+
 # join audio files
 
-print("Current working directory:", os.getcwd())
-#audio_directory = 'audio'
-audio_directory = '.'
-announcement_files = [f for f in os.listdir(audio_directory) if f.endswith(".mp3")]
-announcement_files.sort()
-
 # Check and print the duration of each mp3 file
-for file in announcement_files:
-    file_path = os.path.join(audio_directory, file)
+for file in audio_files:
+    file_path = os.path.join(temp_dir, file)
     audio = MP3(file_path)
     duration = audio.info.length  # duration in seconds
     print(f"File: {file}, Duration: {duration} seconds")
 
-# Create a half-second silent audio file
-if os.path.exists("silence.mp3"):
-    os.remove("silence.mp3")
-subprocess.run(["ffmpeg", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", "0.5", "silence.mp3"])
+# Create a half-second silent audio file if it doesn't exist in the temp_dir 
+if not os.path.exists(os.path.join(temp_dir, "silence.mp3")):
+    subprocess.run(["ffmpeg", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", "0.5", os.path.join(temp_dir, "silence.mp3")])
+
+output_file = os.path.join(temp_dir, "all_announcements.mp3")
+if os.path.exists(os.path.join(output_file)):
+    os.remove( output_file)
 
 # Create a text file listing all the mp3 files to be joined
-firstFile = True
 with open("file_list.txt", "w") as file_list:
-    for file in announcement_files:
-        file_list.write(f"file '{os.path.join(audio_directory, file)}'\n")
-        if not firstFile:
-            file_list.write(f"file '{os.path.join(audio_directory, 'silence.mp3')}'\n")
-        firstFile = False
+    for file in audio_files:
+        file_list.write(f"file '{os.path.join(temp_dir, file)}'\n")
 
-output_file = "all_announcements.mp3"
-if os.path.exists(output_file):
-    os.remove(output_file)
 # Use ffmpeg to concatenate the files listed in the text file
 subprocess.run(["ffmpeg", "-f", "concat", "-safe", "0", "-i", "file_list.txt", "-vf", "apad=pad=0.5", "-c:a", "libmp3lame", output_file])
 os.remove("file_list.txt")
@@ -126,47 +124,36 @@ with open(pdf_filename, 'wb') as pdf_file:
 print(f'Presentation downloaded as {pdf_filename}')
 
 # Convert the PDF file to PNG images
-output_dir = 'slides'
-os.makedirs(output_dir, exist_ok=True)
+os.makedirs(temp_dir, exist_ok=True)
 images = convert_from_path(pdf_filename)
 for i, image in enumerate(images):
-    image_filename = os.path.join(output_dir, f'{i}_slide.png')
+    image_filename = os.path.join(temp_dir, f'{i}_slide.png')
     image.thumbnail((1920, 1080))  # resize to 1920x1080
     image.save(image_filename, 'PNG')
     print(f'Slide {i + 1} saved as {image_filename}')
 
 ### Create video ###
 
-# Print the current working directory
-#slides_directory = 'slides'
-slides_directory = '.'
-
-announcement_files = [f for f in os.listdir(audio_directory) if f.endswith(".mp3")]
-announcement_files.sort()
-
 # Check and print the duration of each mp3 file
 durations = {}
-for file in announcement_files:
+for file in audio_files:
     if file != "all_announcements.mp3" and file != "silence.mp3":
-        file_path = os.path.join(audio_directory, file)
+        file_path = os.path.join(temp_dir, file)
         audio = MP3(file_path)
         duration = audio.info.length  # duration in seconds
         durations[file] = duration
         print(f"File: {file}, Duration: {duration} seconds")
 
 # find all of the png files in the slides directory
-slide_files = [f for f in os.listdir(slides_directory) if f.endswith(".png")]
+slide_files = [f for f in os.listdir(temp_dir) if f.endswith(".png")]
 slide_files.sort()
 
-# Create a temporary directory to store the images with the correct durations
-temp_dir = 'temp_slides'
-os.makedirs(temp_dir, exist_ok=True)
-# Save each slide with the correct duration
-for i, slide_file in enumerate(slide_files):
-    slide_path = os.path.join(slides_directory, slide_file)
+# Store the images with the correct durations
+for j, slide_file in enumerate(slide_files):
+    slide_path = os.path.join(temp_dir, slide_file)
     slide_image = Image.open(slide_path)
-    slide_duration = durations[announcement_files[i]]
-    temp_slide_path = os.path.join(temp_dir, f'{i}_slide.png')
+    slide_duration = durations[audio_files[j]]
+    temp_slide_path = os.path.join(temp_dir, f'{j}_slide.png')
     slide_image.save(temp_slide_path)
     # Create a video segment for each slide
     subprocess.run(["ffmpeg", "-loop", "1", "-i", temp_slide_path, "-c:v", "libx264", "-t", str(slide_duration), "-pix_fmt", "yuv420p", "-vf", "scale=1920:1080", os.path.join(temp_dir, f'{i}_slide.mp4')])
@@ -185,5 +172,7 @@ subprocess.run(["ffmpeg", "-f", "concat", "-safe", "0", "-i", os.path.join(temp_
 
 # Clean up the temporary files
 shutil.rmtree(temp_dir)
+# delete the pdf file
+os.remove(pdf_filename)
 
 print(f"Video created: {output_file}")
