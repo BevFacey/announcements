@@ -1,4 +1,5 @@
 # pip install requests, boto3, mut, Pillow, pdf2image, mutagen
+# pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client
 # sudo apt-get install ffmpeg
 
 import requests
@@ -151,6 +152,11 @@ for file in audio_files:
 # find all of the png files in the slides directory
 slide_files = [f for f in os.listdir(temp_dir) if f.endswith(".png")]
 slide_files.sort()
+
+if len(slide_files) != len(audio_files):
+    print("Error: Number of slides does not match number of audio files")
+    print(f'slide files {len(slide_files)} and audio files {len(audio_files)}')
+    #exit()
 
 # Store the images with the correct durations
 for j, slide_file in enumerate(slide_files):
