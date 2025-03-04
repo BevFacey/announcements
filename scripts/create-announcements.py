@@ -172,7 +172,11 @@ for j, slide_file in enumerate(slide_files):
     temp_slide_path = os.path.join(temp_dir, f'{j}_slide.png')
     slide_image.save(temp_slide_path)
     # Create a video segment for each slide
-    subprocess.run(["ffmpeg", "-loop", "1", "-i", temp_slide_path, "-c:v", "libx264", "-t", str(slide_duration), "-pix_fmt", "yuv420p", "-vf", "scale=1920:1080", os.path.join(temp_dir, f'{j}_slide.mp4')])
+    if j < 10:
+        video_file_name = os.path.join(temp_dir, f'0{j}_slide.mp4')
+    else:
+        video_file_name = os.path.join(temp_dir, f'{j}_slide.mp4')
+    subprocess.run(["ffmpeg", "-loop", "1", "-i", temp_slide_path, "-c:v", "libx264", "-t", str(slide_duration), "-pix_fmt", "yuv420p", "-vf", "scale=1920:1080", os.path.join(temp_dir, video_file_name)])
 
 # Concatenate all the video segments
 with open(os.path.join(temp_dir, "file_list.txt"), "w") as file_list:
