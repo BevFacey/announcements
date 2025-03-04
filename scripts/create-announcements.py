@@ -68,7 +68,10 @@ audio_files = []
 i = 0
 for title, content in announcements:
     print(f"{i} Announcement: {title}")
-    filename = f"{i}_announcement.mp3"
+    if i < 10:
+        filename = f"0{i}_announcement.mp3"
+    else:
+        filename = f"{i}_announcement.mp3"
     audio_files.append(filename)
 
     # if the title is the same as the first bit of the content, don't repeat it
@@ -132,7 +135,10 @@ print(f'Presentation downloaded as {pdf_filename}')
 os.makedirs(temp_dir, exist_ok=True)
 images = convert_from_path(pdf_filename)
 for i, image in enumerate(images):
-    image_filename = os.path.join(temp_dir, f'{i}_slide.png')
+    if i < 10:
+        image_filename = os.path.join(temp_dir, f'0{i}_slide.png')
+    else:
+        image_filename = os.path.join(temp_dir, f'{i}_slide.png')
     image.thumbnail((1920, 1080))  # resize to 1920x1080
     image.save(image_filename, 'PNG')
     print(f'Slide {i + 1} saved as {image_filename}')
