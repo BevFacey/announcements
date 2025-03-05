@@ -6,6 +6,8 @@ from create_video import create_video
 from upload_youtube import upload_video
 
 TEMP_DIR = 'temporary_directory'
+SHEET_KE = '1SV4eWy58Y6iEIIOGUH60xUZV59eaY7ewp4EoeCZzNxc'
+SHEET_GID = '1783949168'
 PRESENTATION_ID = '1Bdwl1ucbFGd1qDrZk-D3o6uN0S_LyN3TQ75kOd4wiGo'
 
 os.makedirs(TEMP_DIR, exist_ok=True)
