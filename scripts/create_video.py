@@ -4,7 +4,8 @@ from PIL import Image
 from mutagen.mp3 import MP3
 
 def create_video(slide_files, audio_files, temp_dir, output_file):
-    durations = {file: MP3(os.path.join(temp_dir, file)).info.length for file in audio_files if file.endswith(".mp3")}
+    #durations = {file: MP3(os.path.join(temp_dir, file)).info.length for file in audio_files if file.endswith(".mp3")}
+    durations = {file: MP3(file).info.length for file in audio_files if file.endswith(".mp3")}
     
     video_segments = []
     for j, slide_file in enumerate(slide_files):
