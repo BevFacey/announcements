@@ -8,3 +8,4 @@ credentials
 *.mp4
 slides.pdf
 file_list.txt
+/scripts/__pycache__
