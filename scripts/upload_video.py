@@ -1,13 +1,12 @@
 # pip install google-auth google-auth-oauthlib google-api-python-client
+import os
+from datetime import datetime
+import google_auth_oauthlib.flow
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+import pickle
 
 def upload_video():
-    import os
-    from datetime import datetime
-    import google_auth_oauthlib.flow
-    from googleapiclient.discovery import build
-    from googleapiclient.http import MediaFileUpload
-    import pickle
-
     #channel_id = 'UCS8NR4uTYkC86rZsnf6LRCA'
     client_secrets_file = 'client-secret.json'
     credentials_file = 'youtube-credentials.pkl'
