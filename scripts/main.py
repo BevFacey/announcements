@@ -8,6 +8,6 @@ download_text()
 download_slides()
 create_audio()
 create_video()
-#upload_video()
+upload_video()
 
 print('Process completed successfully.')
