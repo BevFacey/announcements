@@ -7,6 +7,7 @@ import os
 import webbrowser
 import pyautogui
 import time
+import socket
 
 def get_latest_video(channel_username):
     """
@@ -182,6 +183,21 @@ def create_html_page(video_info):
     
     return "latest_video.html"
 
+def hdmi_input(destination):
+    """
+    Switches the HDMI input
+    Takes in the destination as an integer
+    1 : HDMI 1
+    2 : HDMI 2
+    3 : HDMI 3
+    """
+    UDP_IP = '192.168.140.25'  # VP-440 IP address (default)
+    UDP_PORT = 50000         # VP-440 UDP port (default)
+    command = '#ROUTE 12,1,' + str(int(destination)-1) + '\r'
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.sendto(command.encode(), (UDP_IP, UDP_PORT))
+    sock.close()
+
 def main():
     # YouTube channel username/handle
     channel_username = "bevfaceyannouncements"
@@ -195,10 +211,12 @@ def main():
             webbrowser.open(f"file://{os.path.realpath(html_file)}")
             time.sleep(5) # wait for the page to load
             screen_width, screen_height = pyautogui.size()
+            hdmi_input(3) # switch to laptop
             pyautogui.click(screen_width // 2, screen_height // 2)
             time.sleep(1)
             pyautogui.press('f') # press 'f' to enter fullscreen
             time.sleep(video_info['duration'] + 3) # wait for the video to finish
+            hdmi_input(1) # switch back to BrightSign
             pyautogui.press('esc')
             pyautogui.hotkey('ctrl', 'w') # close the browser tab (assuming that it is Chrome on Windows)
             #os.remove(html_file)
