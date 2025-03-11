@@ -2,6 +2,7 @@ import googleapiclient.discovery
 import googleapiclient.errors
 import json
 from datetime import datetime
+import isodate
 import os
 import webbrowser
 import pyautogui
@@ -82,10 +83,31 @@ def get_latest_video(channel_username):
     video_title = response['items'][0]['snippet']['title']
     publish_time = response['items'][0]['snippet']['publishedAt']
     
+    # Get video duration
+    request = youtube.videos().list(
+        part="contentDetails",
+        id=video_id
+    )
+    response = request.execute()
+    
+    if not response.get('items'):
+        print(f"Could not fetch details for video: {video_id}")
+        return None
+    
+    # Extract duration (ISO 8601 format)
+    iso_duration = response['items'][0]['contentDetails']['duration']
+    
+    # Convert duration to human-readable format (HH:MM:SS)
+    duration_timedelta = isodate.parse_duration(iso_duration)
+    duration_seconds = int(duration_timedelta.total_seconds())
+    #duration_str = str(timedelta(seconds=duration_seconds))
+    print(f"Duration: {duration_seconds} seconds")
+
     return {
         'video_id': video_id,
         'title': video_title,
-        'published_at': publish_time
+        'published_at': publish_time,
+        'duration': duration_seconds
     }
 
 def create_html_page(video_info):
@@ -176,6 +198,10 @@ def main():
             pyautogui.click(screen_width // 2, screen_height // 2)
             time.sleep(1)
             pyautogui.press('f') # press 'f' to enter fullscreen
+            time.sleep(video_info['duration'] + 3) # wait for the video to finish
+            pyautogui.press('esc')
+            pyautogui.hotkey('ctrl', 'w') # close the browser tab (assuming that it is Chrome on Windows)
+            #os.remove(html_file)
     else:
         print("Failed to get the latest video information.")
 
