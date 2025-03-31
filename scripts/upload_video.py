@@ -4,6 +4,7 @@ from datetime import datetime
 import google_auth_oauthlib.flow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
+from google.auth.transport.requests import Request
 import pickle
 
 def upload_video():
@@ -31,7 +32,7 @@ def upload_video():
     if not credentials or not credentials.valid:
         if credentials and credentials.expired and credentials.refresh_token:
             print('Refreshing credentials...')
-            credentials.refresh(google_auth_oauthlib.flow.Request())
+            credentials.refresh(Request())
         else:
             print('Reauthorizing...')
             flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(client_secrets_file, scopes)
