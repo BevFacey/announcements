@@ -1,8 +1,7 @@
 from datetime import date
 import csv
-import base64
-from hume import HumeClient
-from hume.tts import PostedUtterance
+import html
+import boto3
 import os
 
 def create_audio():
@@ -17,31 +16,17 @@ def create_audio():
         announcements.insert(1, land_acknowledgement)
     announcements.append(["That's all for your morning announcements", "Have a great day."])
     
-    with open("hume_keys.txt", "r") as file:
-        lines = file.readlines()
-        api_key = lines[0].strip()
-    hume = HumeClient(api_key=api_key)
-
+    polly_client = boto3.client("polly", region_name="us-west-2")
     for i, (title, content) in enumerate(announcements):
         filename = f"{i:02d}_announcement.mp3"
         text = content if content.lower().startswith(title.lower()) else f"{title}. {content}"
         print(text)
         print('---')
     
-        speech1 = hume.tts.synthesize_json(
-            utterances=[
-                PostedUtterance(
-                    description='A young Canadian news anchor',
-                    text=text,
-                    trailing_silence=0.5,
-                    format='mp3',
-                )
-            ]
-        )
-        audio_data = base64.b64decode(speech1.generations[0].audio)
-        with open(filename, "wb") as f:
-            f.write(audio_data)
-        print("Wrote", filename)
+        ssml_text = f'<speak><amazon:domain name="news">{html.escape(text)}</amazon:domain></speak>'
+        response = polly_client.synthesize_speech(Text=ssml_text, TextType="ssml", OutputFormat="mp3", VoiceId="Joanna", Engine="neural")
+        with open(filename, "wb") as file:
+            file.write(response["AudioStream"].read())
     print(f"{len(announcements)} audio files generated.")
     os.remove('text_data.csv')
 
