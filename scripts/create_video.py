@@ -9,7 +9,7 @@ def create_video():
     if len(slide_files) != len(audio_files):
         print('Error: Number of slides does not match number of audio files')
         print(f'Slide files: {len(slide_files)} and audio files: {len(audio_files)}')
-        return
+        return False
     slide_files.sort()
     audio_files.sort()
    
@@ -43,6 +43,7 @@ def create_video():
     print(f'Video created: {video_output_file}')
     for file in slide_files + audio_files + video_segments:
         os.remove(file)
+    return True
         
 if __name__ == "__main__":
     create_video()
