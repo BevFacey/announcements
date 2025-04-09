@@ -27,21 +27,21 @@ def create_audio():
         text = content if content.lower().startswith(title.lower()) else f"{title}. {content}"
         print(text)
         print('---')
-    
-        speech1 = hume.tts.synthesize_json(
-            utterances=[
-                PostedUtterance(
-                    description='A young Canadian news anchor',
-                    text=text,
-                    trailing_silence=0.5,
-                    format='mp3',
-                )
-            ]
-        )
-        audio_data = base64.b64decode(speech1.generations[0].audio)
-        with open(filename, "wb") as f:
-            f.write(audio_data)
-        print("Wrote", filename)
+        #if i>7:
+        if True:
+            speech1 = hume.tts.synthesize_json(
+                utterances=[
+                    PostedUtterance(
+                        description='A young Canadian news anchor',
+                        text=text,
+                        trailing_silence=0.5,
+                    )
+                ]
+            )
+            audio_data = base64.b64decode(speech1.generations[0].audio)
+            with open(filename, "wb") as f:
+                f.write(audio_data)
+            print("Wrote", filename)
     print(f"{len(announcements)} audio files generated.")
     os.remove('text_data.csv')
 
