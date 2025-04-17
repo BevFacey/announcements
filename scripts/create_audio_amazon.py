@@ -22,11 +22,12 @@ def create_audio():
         text = content if content.lower().startswith(title.lower()) else f"{title}. {content}"
         print(text)
         print('---')
-    
-        ssml_text = f'<speak><amazon:domain name="news">{html.escape(text)}</amazon:domain></speak>'
-        response = polly_client.synthesize_speech(Text=ssml_text, TextType="ssml", OutputFormat="mp3", VoiceId="Joanna", Engine="neural")
-        with open(filename, "wb") as file:
-            file.write(response["AudioStream"].read())
+        #if i>1:
+        if True:
+            ssml_text = f'<speak><amazon:domain name="news">{html.escape(text)}</amazon:domain></speak>'
+            response = polly_client.synthesize_speech(Text=ssml_text, TextType="ssml", OutputFormat="mp3", VoiceId="Joanna", Engine="neural")
+            with open(filename, "wb") as file:
+                file.write(response["AudioStream"].read())
     print(f"{len(announcements)} audio files generated.")
     os.remove('text_data.csv')
 
