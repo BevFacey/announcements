@@ -1,0 +1,12 @@
+boto3
+google-api-python-client
+google-auth
+google-auth-oauthlib
+hume
+isodate
+mutagen
+openai
+pdf2image
+Pillow
+pyautogui
+requests
