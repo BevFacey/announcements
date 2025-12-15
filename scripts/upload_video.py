@@ -10,7 +10,7 @@ import pickle
 def upload_video():
     client_secrets_file = 'client-secret.json'
     credentials_file = 'youtube-credentials.pkl'
-    scopes = ['https://www.googleapis.com/auth/youtube.upload', 'offline']
+    scopes = ['https://www.googleapis.com/auth/youtube.upload']
     video_extension = 'mp4'
 
     # Find the most recent video file
