@@ -11,8 +11,10 @@ def download_text():
     csv_reader = csv.reader(StringIO(response.text))
     next(csv_reader)  # Skip header row
     text_data = [(row[3], row[4]) for row in csv_reader]
+    # replace new lines with spaces and commas with double semicolons
+    text_data = [(title.replace('\n', '  ').replace(',', ';;'), content.replace('\n', '  ').replace(',', ';;')) for title, content in text_data]
     # write text_data to a file
-    with open('text_data.csv', 'w', encoding='utf-8') as file:
+    with open('text_data.csv', 'w', encoding='utf-8', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(text_data)
 

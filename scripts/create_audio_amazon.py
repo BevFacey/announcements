@@ -16,10 +16,22 @@ def create_audio():
         announcements.insert(1, land_acknowledgement)
     announcements.append(["That's all for your morning announcements", "Have a great day."])
     
-    polly_client = boto3.client("polly", region_name="us-west-2")
+    # Load AWS credentials from aws_keys.txt
+    with open("aws_keys.txt", "r") as file:
+        lines = [line.strip() for line in file.readlines() if line.strip()]
+    aws_access_key_id = lines[0]
+    aws_secret_access_key = lines[1]
+    
+    polly_client = boto3.client(
+        "polly",
+        region_name="us-west-2",
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key
+    )
     for i, (title, content) in enumerate(announcements):
         filename = f"{i:02d}_announcement.mp3"
         text = content if content.lower().startswith(title.lower()) else f"{title}. {content}"
+        text = text.replace(';;', ',')
         print(text)
         print('---')
         #if i>1:

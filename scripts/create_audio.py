@@ -25,6 +25,7 @@ def create_audio():
     for i, (title, content) in enumerate(announcements):
         filename = f"{i:02d}_announcement.mp3"
         text = content if content.lower().startswith(title.lower()) else f"{title}. {content}"
+        text = text.replace(';;', ',')
         print(text)
         print('---')
         #if i>7:
